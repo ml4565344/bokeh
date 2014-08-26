@@ -56,7 +56,7 @@ xdr = DataRange1d(sources=[source.columns("dates")])
 ydr = DataRange1d(sources=[source.columns("sunrises", "sunsets")])
 
 title = "Daylight Hours - Warsaw, Poland"
-plot = Plot(title=title, data_sources=[source, patch1_source, patch2_source, text_source], x_range=xdr, y_range=ydr, plot_width=800, plot_height=400)
+plot = Plot(title=title, x_range=xdr, y_range=ydr, plot_width=800, plot_height=400)
 
 patch1 = Patch(x="dates", y="times", fill_color="skyblue", fill_alpha=0.8)
 patch1_glyph = Glyph(data_source=patch1_source, xdata_range=xdr, ydata_range=ydr, glyph=patch1)
@@ -79,13 +79,12 @@ text_glyph = Glyph(data_source=text_source, xdata_range=xdr, ydata_range=ydr, gl
 plot.renderers.append(text_glyph)
 
 xformatter = DatetimeTickFormatter(formats=dict(months=["%b %Y"]))
-xaxis = DatetimeAxis(plot=plot, location="bottom", formatter=xformatter)
+xaxis = DatetimeAxis(plot=plot, formatter=xformatter)
 plot.below.append(xaxis)
-yaxis = DatetimeAxis(plot=plot, location="left")
+yaxis = DatetimeAxis(plot=plot)
 plot.left.append(yaxis)
-yaxis = DatetimeAxis(plot=plot, location="left")
-xgrid = Grid(plot=plot, dimension=0, axis=xaxis)
-ygrid = Grid(plot=plot, dimension=1, axis=yaxis)
+xgrid = Grid(plot=plot, dimension=0, ticker=xaxis.ticker)
+ygrid = Grid(plot=plot, dimension=1, ticker=yaxis.ticker)
 
 legend = Legend(plot=plot, legends={"sunrise": [line1_glyph], "sunset": [line2_glyph]})
 plot.renderers.append(legend)

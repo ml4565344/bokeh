@@ -12,7 +12,6 @@ import logging
 log = logging.getLogger(__name__)
 
 from .bbauth import check_read_authentication_and_create_client
-from ... import resources
 from ..app import bokeh_app
 from ..models import user
 from ..models import docs
@@ -25,9 +24,28 @@ from ..serverbb import prune
 from ...templates import AUTOLOAD
 from ...resources import Resources
 
+def request_resources():
+    """Creates resources instance based on url info from
+    current app/request context
+    """
+    if bokeh_app.url_prefix:
+        # strip of leading slash
+        root_url  = request.url_root + bokeh_app.url_prefix[1:]
+    else:
+        root_url  = request.url_root
+    resources = Resources(root_url=root_url, mode='server')
+    return resources
+
+def render(fname, **kwargs):
+    resources = request_resources()
+    bokeh_prefix = resources.root_url
+    return render_template(fname, bokeh_prefix=bokeh_prefix,
+                           **kwargs)
+
+
 @bokeh_app.route('/bokeh/ping')
 def ping():
-    #test route, to know if the server is up
+    # test route, to know if the server is up
     return "pong"
 
 @bokeh_app.route('/bokeh/')
@@ -35,15 +53,15 @@ def index(*unused_all, **kwargs):
     bokehuser = bokeh_app.current_user()
     if not bokehuser:
         return redirect(url_for('.login_get'))
-    return render_template('bokeh.html',
-                           splitjs=bokeh_app.splitjs,
-                           username=bokehuser.username,
-                           title="Bokeh Documents for %s" % bokehuser.username
-                           )
+    return render('bokeh.html',
+                  splitjs=bokeh_app.splitjs,
+                  username=bokehuser.username,
+                  title="Bokeh Documents for %s" % bokehuser.username
+    )
 
 @bokeh_app.route('/')
 def welcome(*unused_all, **kwargs):
-    redirect(url_for('.index'))
+    return redirect(url_for('.index'))
 
 @bokeh_app.route('/bokeh/favicon.ico')
 def favicon():
@@ -78,7 +96,7 @@ def makedoc():
         return abort(409, e.message)
     jsonstring = protocol.serialize_web(bokehuser.to_public_json())
     msg = protocol.serialize_web({'msgtype' : 'docchange'})
-    bokeh_app.wsmanager.send("bokehuser:" + bokehuser.username, msg)
+    bokeh_app.publisher.send("bokehuser:" + bokehuser.username, msg)
     return make_json(jsonstring)
 
 @bokeh_app.route('/bokeh/doc/<docid>', methods=['delete'])
@@ -92,7 +110,7 @@ def deletedoc(docid):
         return abort(409, e.message)
     jsonstring = protocol.serialize_web(bokehuser.to_public_json())
     msg = protocol.serialize_web({'msgtype' : 'docchange'})
-    bokeh_app.wsmanager.send("bokehuser:" + bokehuser.username, msg)
+    bokeh_app.publisher.send("bokehuser:" + bokehuser.username, msg)
     return make_json(jsonstring)
 
 @bokeh_app.route('/bokeh/getdocapikey/<docid>')
@@ -151,7 +169,7 @@ def show_doc_by_title(title):
     docs = [ doc for doc in bokehuser.docs if doc['title'] == title ]
     doc = docs[0] if len(docs) != 0 else abort(404)
     docid = doc['docid']
-    return render_template('show.html', title=title, docid=docid, splitjs=bokeh_app.splitjs)
+    return render('show.html', title=title, docid=docid, splitjs=bokeh_app.splitjs)
 
 @bokeh_app.route('/bokeh/doc/', methods=['GET', 'OPTIONS'])
 @crossdomain(origin="*", headers=['BOKEH-API-KEY', 'Continuum-Clientid'])
@@ -169,7 +187,7 @@ def doc_by_title():
         except DataIntegrityException as e:
             return abort(409, e.message)
         msg = protocol.serialize_web({'msgtype' : 'docchange'})
-        bokeh_app.wsmanager.send("bokehuser:" + bokehuser.username, msg)
+        bokeh_app.publisher.send("bokehuser:" + bokehuser.username, msg)
     else:
         doc = docs[0]
         docid = doc['docid']
@@ -220,86 +238,9 @@ def make_test_plot():
     return l
     #show()
 
-
-
-
-
-@bokeh_app.route("/bokeh/generate_embed/<inject_type>")
-def generate_embed(inject_type):
-    """the following 8 functions setup embedding pages in a variety of formats
-
-    urls with no_js don't have any of our javascript included in
-    script tags.  the embed.js code is supposed to make sure the
-    proper js files are sourced.  Embed.js should only donwload a new
-    js file if the existing javascript code isn't in the runtime
-    environment.
-
-    static places a script tag into the html markup.
-
-    static_double places two script tags in the dom.  This should
-    still cause the bokeh js to be downloaded only once
-
-    the rest of the urls construct a script tag with a source of the
-    embed.js along with the proper attributes.
-
-    with_delay doesn't inject until 5 seconds after pageload
-
-    double_delay injects two separate plots, one at 3 seconds in,
-        the other at 5 seconds in.
-
-    onload injects at onload
-
-    direct injects as soon as the script block is hit.
-
-    Everyone one of these urls should display the same plot
-    """
-
-    plot = make_test_plot()
-    delay, double_delay, onload, direct  = [False] * 4
-    plot_scr = ""
-
-    if inject_type == "delay":
-        delay = True
-    if inject_type == "double_delay":
-        double_delay = True
-    elif inject_type == "onload":
-        onload = True
-    elif inject_type == "direct":
-        direct = True
-    elif inject_type == "static":
-        plot_scr = plot.create_html_snippet(server=True)
-    elif inject_type == "static_double":
-
-        plot_scr = "%s %s" % (plot.create_html_snippet(server=True),
-                              plot.create_html_snippet(server=True))
-
-
-
-    return dom_embed(
-        plot, delay=delay, onload=onload,
-        direct=direct,  plot_scr=plot_scr, double_delay=double_delay)
-
-@bokeh_app.route("/bokeh/embed.js")
-def embed_js():
-    import jinja2
-    t_file = os.path.join(
-        os.path.dirname(
-            os.path.abspath(__file__)), "..", "..", "templates", "embed_direct.js")
-    with open(t_file) as f:
-        template = jinja2.Template(f.read())
-        rendered = template.render(host=request.host)
-
-        return  Response(rendered, 200,
-                         {'Content-Type':'application/javascript'})
-
-
 @bokeh_app.route("/bokeh/autoload.js/<elementid>")
 def autoload_js(elementid):
-    if bokeh_app.url_prefix:
-        root_url  = request.url_root + bokeh_app.url_prefix[1:] # strip of leading slash
-    else:
-        root_url  = request.url_root
-    resources = Resources(root_url=root_url, mode='server')
+    resources = request_resources()
     rendered = AUTOLOAD.render(
         js_url = resources.js_files[0],
         css_files = resources.css_files,
@@ -307,7 +248,6 @@ def autoload_js(elementid):
     )
     return Response(rendered, 200,
                     {'Content-Type':'application/javascript'})
-
 
 @bokeh_app.route('/bokeh/objinfo/<docid>/<objid>', methods=['GET', 'OPTIONS'])
 @crossdomain(origin="*", headers=['BOKEH-API-KEY', 'Continuum-Clientid'])
@@ -335,11 +275,22 @@ def show_obj(docid, objid):
     bokehuser = bokeh_app.current_user()
     if not bokehuser:
         return redirect(url_for(".login_get", next=request.url))
-    return render_template("oneobj.html",
-                           docid=docid,
-                           objid=objid,
-                           hide_navbar=True,
-                           splitjs=bokeh_app.splitjs,
-                           username=bokehuser.username)
+    return render("oneobj.html",
+                  docid=docid,
+                  objid=objid,
+                  hide_navbar=True,
+                  splitjs=bokeh_app.splitjs,
+                  username=bokehuser.username)
 
-
+@bokeh_app.route('/bokeh/wsurl/', methods=['GET'])
+def wsurl():
+    if bokeh_app.websocket_params.get('ws_conn_string'):
+        return bokeh_app.websocket_params.get('ws_conn_string')
+    else:
+        prefix = bokeh_app.url_prefix
+        if prefix is None or prefix == "/":
+            prefix = ""
+        ws_port = bokeh_app.websocket_params['ws_port']
+        host = request.host.split(":")[0]
+        #TODO:ssl..?
+        return "ws://%s:%d%s/bokeh/sub/" % (host, ws_port, prefix)

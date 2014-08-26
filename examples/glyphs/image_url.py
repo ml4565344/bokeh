@@ -24,7 +24,7 @@ source = ColumnDataSource(dict(
 xdr = Range1d(start=-100, end=200)
 ydr = Range1d(start=-100, end=200)
 
-plot = Plot(title="ImageURL", data_sources=[source], x_range=xdr, y_range=ydr)
+plot = Plot(title="ImageURL", x_range=xdr, y_range=ydr)
 
 image1 = ImageURL(url="url", x="x1", y="y1", w="w1", h="h1", angle=0.0, anchor="center")
 image1_glyph = Glyph(data_source=source, xdata_range=xdr, ydata_range=ydr, glyph=image1)
@@ -38,12 +38,12 @@ image3 = ImageURL(url=dict(value=url), x=200, y=-100, angle=0.0, anchor="bottom_
 image3_glyph = Glyph(data_source=source, xdata_range=xdr, ydata_range=ydr, glyph=image3)
 plot.renderers.append(image3_glyph)
 
-xaxis = LinearAxis(plot=plot, location="bottom")
+xaxis = LinearAxis(plot=plot)
 plot.below.append(xaxis)
-yaxis = LinearAxis(plot=plot, location="left")
+yaxis = LinearAxis(plot=plot)
 plot.left.append(yaxis)
-xgrid = Grid(plot=plot, dimension=0, axis=xaxis)
-ygrid = Grid(plot=plot, dimension=1, axis=yaxis)
+xgrid = Grid(plot=plot, dimension=0, ticker=xaxis.ticker)
+ygrid = Grid(plot=plot, dimension=1, ticker=yaxis.ticker)
 
 doc = Document( )
 doc.add(plot)

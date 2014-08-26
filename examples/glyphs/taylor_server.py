@@ -59,7 +59,7 @@ source = ColumnDataSource(data=dict(
 xdr = DataRange1d(sources=[source.columns("x")])
 ydr = DataRange1d(sources=[source.columns("fy")])
 
-plot = Plot(data_sources=[source], x_range=xdr, y_range=ydr, plot_width=800, plot_height=400)
+plot = Plot(x_range=xdr, y_range=ydr, plot_width=800, plot_height=400)
 
 line_f = Line(x="x", y="fy", line_color="blue", line_width=2)
 line_f_glyph = Glyph(data_source=source, xdata_range=xdr, ydata_range=ydr, glyph=line_f)
@@ -69,13 +69,13 @@ line_t = Line(x="x", y="ty", line_color="red", line_width=2)
 line_t_glyph = Glyph(data_source=source, xdata_range=xdr, ydata_range=ydr, glyph=line_t)
 plot.renderers.append(line_t_glyph)
 
-xaxis = LinearAxis(plot=plot, location="bottom")
+xaxis = LinearAxis(plot=plot)
 plot.below.append(xaxis)
-yaxis = LinearAxis(plot=plot, location="left")
+yaxis = LinearAxis(plot=plot)
 plot.left.append(yaxis)
 
-xgrid = Grid(plot=plot, dimension=0, axis=xaxis)
-ygrid = Grid(plot=plot, dimension=1, axis=yaxis)
+xgrid = Grid(plot=plot, dimension=0, ticker=xaxis.ticker)
+ygrid = Grid(plot=plot, dimension=1, ticker=yaxis.ticker)
 
 legend = Legend(plot=plot, orientation="bottom_left")
 plot.renderers.append(legend)

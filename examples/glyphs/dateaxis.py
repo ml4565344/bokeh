@@ -35,10 +35,10 @@ glyph_renderer = Glyph(
     glyph=circle,
 )
 
-plot = Plot(x_range=xdr, y_range=ydr, data_sources=[source], min_border=80)
-xaxis = DatetimeAxis(plot=plot, location="bottom")
+plot = Plot(x_range=xdr, y_range=ydr, min_border=80)
+xaxis = DatetimeAxis(plot=plot)
 plot.below.append(xaxis)
-yaxis = LinearAxis(plot=plot, location="left")
+yaxis = LinearAxis(plot=plot)
 plot.left.append(yaxis)
 
 pantool = PanTool(dimensions=["width", "height"])

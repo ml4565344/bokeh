@@ -12,11 +12,11 @@ define [
   "common/plot",
   "common/plot_context",
 
-  "mapper/1d/categorical_mapper",
-  "mapper/1d/linear_mapper",
-  "mapper/1d/log_mapper",
-  "mapper/2d/grid_mapper",
-  "mapper/color/linear_color_mapper",
+  "mapper/categorical_mapper",
+  "mapper/linear_mapper",
+  "mapper/log_mapper",
+  "mapper/grid_mapper",
+  "mapper/linear_color_mapper",
 
   "range/data_factor_range",
   "range/data_range1d",
@@ -80,6 +80,7 @@ define [
   'widget/vbox'
   'widget/textinput'
   'widget/vboxmodelform'
+  'widget/vboxform'
   'widget/pretext'
   'widget/selectbox'
   'widget/slider'
@@ -91,13 +92,23 @@ define [
   'widget/tabs'
   'widget/dialog'
 
+  'transforms/autoencode'
+  'transforms/binarysegment'
   'transforms/const'
+  'transforms/contour'
   'transforms/count'
+  'transforms/countcategories'
+  'transforms/encode'
   'transforms/cuberoot'
+  'transforms/hdalpha'
   'transforms/id'
   'transforms/interpolate'
+  'transforms/interpolatecolor'
+  'transforms/nonzero'
+  'transforms/ratio'
   'transforms/seq'
   'transforms/spread'
+  'transforms/tocounts'
 ], (_, require) ->
 
   # add some useful functions to underscore
@@ -183,6 +194,7 @@ define [
     HBox:                     'widget/hbox'
     VBox:                     'widget/vbox'
     VBoxModelForm:            'widget/vboxmodelform'
+    VBoxForm:                 'widget/vboxform'
     TextInput:                'widget/textinput'
     PreText:                  'widget/pretext'
     Select:                   'widget/selectbox'
@@ -195,13 +207,23 @@ define [
     Tabs:                     'widget/tabs'
     Dialog:                   'widget/dialog'
 
+    AutoEncode:               'transforms/autoencode'
+    BinarySegment:            'transforms/binarysegment'
     Const:                    'transforms/const'
+    Contour:                  'transforms/contour'
     Count:                    'transforms/count'
+    CountCategories:          'transforms/countcategories'
     Cuberoot:                 'transforms/cuberoot'
+    HDAlpha:                  'transforms/hdalpha'
+    Encode:                   'transforms/encode'
     Id:                       'transforms/id'
     Interpolate:              'transforms/interpolate'
+    InterpolateColor:         'transforms/interpolatecolor'
+    NonZero:                  'transforms/nonzero'
+    Ratio:                    'transforms/ratio'
     Seq:                      'transforms/seq'
     Spread:                   'transforms/spread'
+    ToCounts:                 'transforms/tocounts'
   mod_cache = {}
   collection_overrides = {}
   Collections = (typename) ->

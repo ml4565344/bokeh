@@ -36,10 +36,10 @@ renderer = Glyph(
         glyph = line_glyph
         )
 
-plot = Plot(x_range=xdr, y_range=ydr, data_sources=[source], min_border=50)
-xaxis = LinearAxis(plot=plot, location="bottom")
+plot = Plot(x_range=xdr, y_range=ydr, min_border=50)
+xaxis = LinearAxis(plot=plot)
 plot.below.append(xaxis)
-yaxis = LinearAxis(plot=plot, location="left")
+yaxis = LinearAxis(plot=plot)
 plot.left.append(yaxis)
 
 pantool = PanTool(dimensions=["width", "height"])
