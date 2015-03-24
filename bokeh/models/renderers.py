@@ -17,6 +17,10 @@ class Renderer(PlotObject):
     generally useful to instantiate on its own.
 
     """
+    level = Enum(String, help="""
+        Set the rendering level for this renderer, valid options are
+        "image", "underlay", "glyph", "overlay", "annotation", "tool"
+        """)
 
 class GlyphRenderer(Renderer):
     """
